@@ -30,8 +30,8 @@ func (s *fakeStore) ListIssues(_ context.Context, filter appstore.ListFilter) ([
 	return s.issues, s.issuesErr
 }
 
-func (s *fakeStore) ListBlockingDeps(_ context.Context, prefix string) ([]appstore.DepEdge, error) {
-	s.depsPrefix = prefix
+func (s *fakeStore) ListBlockingDeps(_ context.Context, f appstore.ListFilter) ([]appstore.DepEdge, error) {
+	s.depsPrefix = f.Prefix
 	return s.deps, s.depsErr
 }
 

@@ -137,7 +137,7 @@ func (a *Adapter) EnsureProject(ctx context.Context) error {
 // ReadyIssues returns unblocked issues for the configured project prefix. It
 // requires an initialized Adapter with a non-nil Store.
 func (a *Adapter) ReadyIssues(ctx context.Context) ([]Issue, error) {
-	return a.store.ReadyIssues(ctx, a.projectPrefix, a.terminalStates, a.activeStates)
+	return a.store.ReadyIssues(ctx, ListFilter{Prefix: a.projectPrefix}, a.terminalStates, a.activeStates)
 }
 
 // Close releases database resources owned by the underlying store.
