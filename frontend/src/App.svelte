@@ -41,8 +41,8 @@
 
 <AppShell {routes} activePath={route.path} onNavigate={navigate}>
   {#snippet title()}
-    <h1>{route.title}</h1>
-    <p>{route.description}</p>
+    <h1 class="text-[28px] leading-tight font-bold text-text">{route.title}</h1>
+    <p class="mt-1 text-muted">{route.description}</p>
   {/snippet}
 
   {#if route.path === '/'}

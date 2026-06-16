@@ -6,6 +6,7 @@
   import EmptyState from '../../lib/components/EmptyState.svelte'
   import ErrorState from '../../lib/components/ErrorState.svelte'
   import LoadingState from '../../lib/components/LoadingState.svelte'
+  import { statePillClass, stateLabel } from '../../lib/ui/state'
 
   let graph = $state<GraphResponse>({ nodes: [], edges: [] })
   let loading = $state(false)
@@ -51,18 +52,18 @@
   }
 </script>
 
-<section class="workspace graph-workspace" aria-label="Dependency graph workspace">
-  <div class="toolbar graph-toolbar">
-    <div class="graph-summary">
-      <strong>{graph.nodes.length}</strong>
+<section class="card" aria-label="Dependency graph workspace">
+  <div class="flex items-end justify-between gap-3 border-b border-border p-3.5 max-mobile:flex-col max-mobile:items-stretch">
+    <div class="flex flex-wrap items-baseline gap-1.5 text-muted">
+      <strong class="text-2xl text-text">{graph.nodes.length}</strong>
       <span>{graph.nodes.length === 1 ? 'issue' : 'issues'}</span>
-      <strong>{graph.edges.length}</strong>
+      <strong class="text-2xl text-text">{graph.edges.length}</strong>
       <span>{graph.edges.length === 1 ? 'dependency' : 'dependencies'}</span>
       {#if refreshedAt}
-        <small>Refreshed {refreshedAt.toLocaleTimeString()}</small>
+        <small class="basis-full text-muted">Refreshed {refreshedAt.toLocaleTimeString()}</small>
       {/if}
     </div>
-    <button type="button" class="secondary" disabled={loading} onclick={loadGraph}>
+    <button type="button" class="btn btn-secondary" disabled={loading} onclick={loadGraph}>
       {loading ? 'Refreshing' : 'Refresh'}
     </button>
   </div>
@@ -77,7 +78,7 @@
     <div class="graph-content">
       <div class="graph-canvas" aria-label="Dependency network">
         {#if error !== ''}
-          <p class="form-error" role="alert">{error}</p>
+          <p class="error-panel" role="alert">{error}</p>
         {/if}
         <svg
           viewBox={`0 0 ${layout.width} ${layout.height}`}
@@ -122,33 +123,33 @@
       <aside class="graph-inspector" aria-label="Selected issue">
         {#if selectedNode}
           <div>
-            <h2>{selectedNode.title}</h2>
-            <p>{selectedNode.id}</p>
+            <h2 class="text-xl font-semibold text-text">{selectedNode.title}</h2>
+            <p class="text-muted">{selectedNode.id}</p>
           </div>
-          <div class="graph-pills">
-            <span>{selectedNode.state}</span>
-            <span>P{selectedNode.priority}</span>
-            <span>{selectedNode.incoming} blockers</span>
-            <span>{selectedNode.outgoing} blocked</span>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="pill {statePillClass(selectedNode.state)}">{stateLabel(selectedNode.state)}</span>
+            <span class="pill">P{selectedNode.priority}</span>
+            <span class="pill">{selectedNode.incoming} blockers</span>
+            <span class="pill">{selectedNode.outgoing} blocked</span>
           </div>
           {#if selectedNode.labels.length > 0}
-            <div class="label-row">
+            <div class="flex flex-wrap gap-1.5">
               {#each selectedNode.labels as label}
-                <span>{label}</span>
+                <span class="pill">{label}</span>
               {/each}
             </div>
           {/if}
-          <div class="edge-list">
-            <h3>Relationships</h3>
+          <div class="grid gap-2.5">
+            <h3 class="text-base font-semibold text-text">Relationships</h3>
             {#if selectedEdges.length === 0}
-              <p class="muted">No dependencies yet.</p>
+              <p class="text-muted">No dependencies yet.</p>
             {:else}
-              <ul>
+              <ul class="grid gap-2">
                 {#each selectedEdges as edge}
-                  <li>
-                    <span>{edge.sourceNode.title}</span>
-                    <small>blocks</small>
-                    <span>{edge.targetNode.title}</span>
+                  <li class="grid gap-0.5 rounded-md border border-border px-2.5 py-2">
+                    <span class="truncate text-text">{edge.sourceNode.title}</span>
+                    <small class="text-muted">blocks</small>
+                    <span class="truncate text-text">{edge.targetNode.title}</span>
                   </li>
                 {/each}
               </ul>
@@ -161,28 +162,12 @@
 </section>
 
 <style>
-  .graph-toolbar {
-    justify-content: space-between;
-  }
-
-  .graph-summary {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 6px;
-    color: #657166;
-  }
-
-  .graph-summary strong {
-    color: #17211b;
-    font-size: 24px;
-  }
-
-  .graph-summary small {
-    flex-basis: 100%;
-    color: #657166;
-  }
-
+  /*
+   * Layout + SVG painting that Tailwind utilities can't cleanly express
+   * (descendant/:first-of-type/:focus-visible/.selected on generated SVG, and
+   * the marker arrowhead which is painted in marker space). All colors are
+   * driven by the semantic theme tokens, so this stays theme-correct.
+   */
   .graph-content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 300px;
@@ -191,7 +176,7 @@
 
   .graph-canvas {
     min-width: 0;
-    border-right: 1px solid #d9ded4;
+    border-right: 1px solid var(--color-border-strong);
     overflow: auto;
     padding: 16px;
   }
@@ -203,12 +188,12 @@
   }
 
   marker path {
-    fill: #657166;
+    fill: var(--color-muted);
   }
 
   .graph-edge {
     fill: none;
-    stroke: #9aa694;
+    stroke: var(--color-muted);
     stroke-width: 2;
   }
 
@@ -218,27 +203,33 @@
   }
 
   .graph-node rect {
-    fill: #ffffff;
-    stroke: #cbd3c7;
+    fill: var(--color-surface-2);
+    stroke: var(--color-border-strong);
     stroke-width: 1.5;
   }
 
   .graph-node:hover rect,
   .graph-node:focus-visible rect,
   .graph-node.selected rect {
-    fill: #f1f5ee;
-    stroke: #245942;
+    fill: var(--color-surface);
+    stroke: var(--color-primary);
     stroke-width: 2;
   }
 
+  /* Keyboard focus on the only interactive SVG element must be visible. */
+  .graph-node:focus-visible rect {
+    stroke: var(--color-focus);
+    stroke-width: 2.5;
+  }
+
   .graph-node text:first-of-type {
-    fill: #17211b;
+    fill: var(--color-text);
     font-size: 14px;
     font-weight: 700;
   }
 
   .graph-node text:last-of-type {
-    fill: #657166;
+    fill: var(--color-muted);
     font-size: 12px;
   }
 
@@ -249,54 +240,6 @@
     padding: 18px;
   }
 
-  .graph-inspector h2 {
-    font-size: 20px;
-  }
-
-  .graph-inspector p,
-  .edge-list small {
-    color: #657166;
-  }
-
-  .graph-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .graph-pills span {
-    border-radius: 999px;
-    padding: 4px 10px;
-    color: #245942;
-    background: #e4ebe1;
-    font-size: 13px;
-  }
-
-  .edge-list {
-    display: grid;
-    gap: 10px;
-  }
-
-  .edge-list h3 {
-    font-size: 16px;
-  }
-
-  .edge-list ul {
-    display: grid;
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .edge-list li {
-    display: grid;
-    gap: 2px;
-    border: 1px solid #d9ded4;
-    border-radius: 6px;
-    padding: 8px 10px;
-  }
-
   @media (max-width: 900px) {
     .graph-content {
       grid-template-columns: 1fr;
@@ -304,7 +247,7 @@
 
     .graph-canvas {
       border-right: 0;
-      border-bottom: 1px solid #d9ded4;
+      border-bottom: 1px solid var(--color-border-strong);
     }
   }
 </style>
