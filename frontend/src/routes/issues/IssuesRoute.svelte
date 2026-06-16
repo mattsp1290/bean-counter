@@ -10,6 +10,7 @@
   import EmptyState from '../../lib/components/EmptyState.svelte'
   import ErrorState from '../../lib/components/ErrorState.svelte'
   import LoadingState from '../../lib/components/LoadingState.svelte'
+  import { statePillClass, stateLabel } from '../../lib/ui/state'
   import {
     emptyIssueForm,
     issueFormToCreateRequest,
@@ -299,14 +300,18 @@
   }
 </script>
 
-<section class="issues-layout" aria-label="Issues workspace">
-  <div class="workspace issues-list">
-    <div class="toolbar">
-      <label>
+<section
+  class="grid grid-cols-[minmax(320px,0.9fr)_minmax(360px,1.1fr)] gap-4 max-mobile:grid-cols-1"
+  aria-label="Issues workspace"
+>
+  <div class="card min-w-0">
+    <div class="flex items-end gap-3 border-b border-border p-3.5 max-mobile:flex-col max-mobile:items-stretch">
+      <label class="field-label">
         <span>Filter</span>
-        <input bind:value={search} type="search" placeholder="Title, label, or id" />
+        <input class="field" bind:value={search} type="search" placeholder="Title, label, or id" />
       </label>
       <select
+        class="field max-w-[160px] max-mobile:max-w-none"
         aria-label="State"
         value={stateFilter}
         onchange={(event) => setStateFilter(event.currentTarget.value as 'all' | IssueState)}
@@ -318,7 +323,7 @@
         <option value="closed">Closed</option>
         <option value="done">Done</option>
       </select>
-      <button type="button" onclick={startCreate}>New issue</button>
+      <button class="btn" type="button" onclick={startCreate}>New issue</button>
     </div>
 
     {#if listLoading}
@@ -328,58 +333,66 @@
     {:else if visibleIssues.length === 0}
       <EmptyState title="No issues found" message="Create an issue or adjust the current filters." />
     {:else}
-      <div class="issue-table" role="list" aria-label="Issues">
+      <div class="grid" role="list" aria-label="Issues">
         {#each visibleIssues as issue}
+          {@const active = route.id === issue.id}
           <button
             type="button"
-            class:active={route.id === issue.id}
-            class="issue-row"
+            class={[
+              'grid min-h-16 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-l-2 border-border px-3.5 py-3 text-left transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus',
+              active
+                ? 'border-l-primary bg-surface-2'
+                : 'border-l-transparent hover:bg-surface-2',
+            ]}
             onclick={() => navigate(`/issues/${issue.id}`)}
           >
-            <span>
-              <strong>{issue.title}</strong>
-              <small>{issue.id}</small>
+            <span class="grid min-w-0 gap-1">
+              <strong class="truncate text-text">{issue.title}</strong>
+              <small class="truncate text-muted">{issue.id}</small>
             </span>
-            <span>{issue.state}</span>
-            <span>P{issue.priority}</span>
+            <span class="pill {statePillClass(issue.state)}">{stateLabel(issue.state)}</span>
+            <span class="text-[13px] text-muted">P{issue.priority}</span>
           </button>
         {/each}
       </div>
     {/if}
   </div>
 
-  <div class="workspace issue-panel">
+  <div class="card min-w-0">
     {#if route.mode === 'create' || route.mode === 'edit'}
-      <form class="issue-form" onsubmit={submitIssue}>
+      <form class="grid gap-3.5 p-[18px]" onsubmit={submitIssue}>
         <div>
-          <h2>{route.mode === 'edit' ? 'Edit issue' : 'Create issue'}</h2>
-          <p>{route.mode === 'edit' ? route.id : 'Add work to the current project.'}</p>
+          <h2 class="text-[22px] font-semibold text-text">
+            {route.mode === 'edit' ? 'Edit issue' : 'Create issue'}
+          </h2>
+          <p class="text-muted">{route.mode === 'edit' ? route.id : 'Add work to the current project.'}</p>
         </div>
 
         {#if formError !== ''}
-          <p class="form-error">{formError}</p>
+          <p class="error-panel">{formError}</p>
         {/if}
 
-        <label>
+        <label class="field-label">
           <span>Title</span>
-          <input bind:value={form.title} required maxlength="300" />
+          <input class="field" bind:value={form.title} required maxlength="300" />
         </label>
 
-        <label>
+        <label class="field-label">
           <span>Description</span>
-          <textarea bind:value={form.description} maxlength="20000"></textarea>
+          <textarea class="field min-h-[120px] resize-y py-2.5" bind:value={form.description} maxlength="20000"></textarea>
         </label>
 
-        <div class="form-grid">
-          <label>
+        <div class="grid grid-cols-2 gap-3 max-mobile:grid-cols-1">
+          <label class="field-label">
             <span>Priority</span>
-            <input bind:value={form.priority} type="number" min="0" max="4" />
+            <input class="field" bind:value={form.priority} type="number" min="0" max="4" />
           </label>
 
           {#if route.mode === 'create'}
-            <label>
+            <label class="field-label">
               <span>Type</span>
-              <select bind:value={form.issue_type}>
+              <select class="field" bind:value={form.issue_type}>
                 <option value="bug">Bug</option>
                 <option value="feature">Feature</option>
                 <option value="task">Task</option>
@@ -388,31 +401,31 @@
               </select>
             </label>
           {:else}
-            <label>
+            <label class="field-label">
               <span>Type</span>
-              <input value={form.issue_type} disabled />
+              <input class="field" value={form.issue_type} disabled />
             </label>
           {/if}
         </div>
 
-        <label>
+        <label class="field-label">
           <span>Labels</span>
-          <input bind:value={form.labels} placeholder="ui, api" />
+          <input class="field" bind:value={form.labels} placeholder="ui, api" />
         </label>
 
-        <label>
+        <label class="field-label">
           <span>Branch</span>
-          <input bind:value={form.branch_name} maxlength="255" />
+          <input class="field" bind:value={form.branch_name} maxlength="255" />
         </label>
 
-        <label>
+        <label class="field-label">
           <span>URL</span>
-          <input bind:value={form.url} type="url" maxlength="2048" />
+          <input class="field" bind:value={form.url} type="url" maxlength="2048" />
         </label>
 
-        <div class="actions">
-          <button disabled={saving} type="submit">{saving ? 'Saving' : 'Save issue'}</button>
-          <button type="button" class="secondary" onclick={() => navigate(route.id ? `/issues/${route.id}` : '/')}>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn" disabled={saving} type="submit">{saving ? 'Saving' : 'Save issue'}</button>
+          <button type="button" class="btn btn-secondary" onclick={() => navigate(route.id ? `/issues/${route.id}` : '/')}>
             Cancel
           </button>
         </div>
@@ -420,45 +433,51 @@
     {:else if detailLoading}
       <LoadingState message="Loading issue" />
     {:else if route.mode === 'detail' && selectedIssue}
-      <article class="issue-detail">
+      <article class="grid gap-3.5 p-[18px]">
         {#if error !== ''}
-          <p class="form-error">{error}</p>
+          <p class="error-panel">{error}</p>
         {/if}
         <div>
-          <h2>{selectedIssue.title}</h2>
-          <p>{selectedIssue.id} · {selectedIssue.issue_type} · P{selectedIssue.priority}</p>
+          <h2 class="text-[22px] font-semibold text-text">{selectedIssue.title}</h2>
+          <p class="text-muted">{selectedIssue.id} · {selectedIssue.issue_type} · P{selectedIssue.priority}</p>
         </div>
-        <p class="status-pill">{selectedIssue.state}</p>
-        <p>{selectedIssue.description || 'No description.'}</p>
-        <div class="label-row">
+        <p class="pill {statePillClass(selectedIssue.state)}">{stateLabel(selectedIssue.state)}</p>
+        <p class="text-muted">{selectedIssue.description || 'No description.'}</p>
+        <div class="flex flex-wrap gap-1.5">
           {#each selectedIssue.labels as label}
-            <span>{label}</span>
+            <span class="pill">{label}</span>
           {/each}
         </div>
-        <dl>
-          <div><dt>Created</dt><dd>{new Date(selectedIssue.created_at).toLocaleString()}</dd></div>
-          <div><dt>Updated</dt><dd>{new Date(selectedIssue.updated_at).toLocaleString()}</dd></div>
+        <dl class="grid gap-2">
+          <div class="grid grid-cols-[100px_minmax(0,1fr)] gap-3">
+            <dt class="text-muted">Created</dt>
+            <dd class="m-0">{new Date(selectedIssue.created_at).toLocaleString()}</dd>
+          </div>
+          <div class="grid grid-cols-[100px_minmax(0,1fr)] gap-3">
+            <dt class="text-muted">Updated</dt>
+            <dd class="m-0">{new Date(selectedIssue.updated_at).toLocaleString()}</dd>
+          </div>
         </dl>
-        <section class="dependency-editor" aria-label="Dependencies">
+        <section class="grid gap-3 border-t border-border pt-3.5" aria-label="Dependencies">
           <div>
-            <h3>Blocked by</h3>
-            <p>Issues that must close before this work is ready.</p>
+            <h3 class="text-[17px] font-semibold text-text">Blocked by</h3>
+            <p class="text-muted">Issues that must close before this work is ready.</p>
           </div>
 
           {#if dependencyError !== ''}
-            <p class="form-error" role="alert">{dependencyError}</p>
+            <p class="error-panel" role="alert">{dependencyError}</p>
           {/if}
 
           {#if selectedIssue.blocked_by.length === 0}
-            <p class="muted">No blockers.</p>
+            <p class="text-muted">No blockers.</p>
           {:else}
-            <ul class="dependency-list" aria-label="Current blockers">
+            <ul class="grid gap-2" aria-label="Current blockers">
               {#each selectedIssue.blocked_by as blockedById}
-                <li>
-                  <span>{issueLabel(blockedById)}</span>
+                <li class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 rounded-md border border-border px-2.5 py-2 max-mobile:grid-cols-1">
+                  <span class="truncate">{issueLabel(blockedById)}</span>
                   <button
                     type="button"
-                    class="secondary"
+                    class="btn btn-secondary"
                     disabled={dependencySaving}
                     aria-label={`Remove blocker ${issueLabel(blockedById)}`}
                     onclick={() => removeDependency(blockedById)}
@@ -470,10 +489,10 @@
             </ul>
           {/if}
 
-          <form class="dependency-form" onsubmit={addDependency}>
-            <label>
+          <form class="flex items-end gap-2.5 max-mobile:flex-col max-mobile:items-stretch" onsubmit={addDependency}>
+            <label class="field-label">
               <span>Add blocker</span>
-              <select bind:value={dependencyInput} disabled={dependencyOptions.length === 0 || dependencySaving}>
+              <select class="field" bind:value={dependencyInput} disabled={dependencyOptions.length === 0 || dependencySaving}>
                 {#if dependencyOptions.length === 0}
                   <option value="">No available issues</option>
                 {:else}
@@ -483,15 +502,15 @@
                 {/if}
               </select>
             </label>
-            <button type="submit" disabled={dependencyOptions.length === 0 || dependencySaving}>
+            <button class="btn" type="submit" disabled={dependencyOptions.length === 0 || dependencySaving}>
               {dependencySaving ? 'Updating' : 'Add blocker'}
             </button>
           </form>
         </section>
-        <div class="actions">
-          <button type="button" onclick={() => startEdit(selectedIssue!)}>Edit</button>
-          <button type="button" class="secondary" onclick={() => closeIssue(selectedIssue!)}>Close</button>
-          <button type="button" class="danger" onclick={() => deleteIssue(selectedIssue!)}>Delete</button>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn" type="button" onclick={() => startEdit(selectedIssue!)}>Edit</button>
+          <button type="button" class="btn btn-secondary" onclick={() => closeIssue(selectedIssue!)}>Close</button>
+          <button type="button" class="btn btn-danger" onclick={() => deleteIssue(selectedIssue!)}>Delete</button>
         </div>
       </article>
     {:else if error !== ''}

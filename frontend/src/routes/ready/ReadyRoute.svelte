@@ -5,6 +5,7 @@
   import EmptyState from '../../lib/components/EmptyState.svelte'
   import ErrorState from '../../lib/components/ErrorState.svelte'
   import LoadingState from '../../lib/components/LoadingState.svelte'
+  import { statePillClass, stateLabel } from '../../lib/ui/state'
 
   interface Props {
     navigate: (path: string) => void
@@ -60,16 +61,16 @@
   }
 </script>
 
-<section class="workspace ready-workspace" aria-label="Ready queue workspace">
-  <div class="toolbar">
-    <div class="queue-summary">
-      <strong>{issues.length}</strong>
+<section class="card" aria-label="Ready queue workspace">
+  <div class="flex items-end justify-between gap-3 border-b border-border p-3.5 max-mobile:flex-col max-mobile:items-stretch">
+    <div class="flex flex-wrap items-baseline gap-1.5 text-muted">
+      <strong class="text-2xl text-text">{issues.length}</strong>
       <span>{issues.length === 1 ? 'ready issue' : 'ready issues'}</span>
       {#if refreshedAt}
-        <small>Refreshed {refreshedAt.toLocaleTimeString()}</small>
+        <small class="basis-full text-muted">Refreshed {refreshedAt.toLocaleTimeString()}</small>
       {/if}
     </div>
-    <button type="button" class="secondary" disabled={loading} onclick={loadReadyQueue}>
+    <button type="button" class="btn btn-secondary" disabled={loading} onclick={loadReadyQueue}>
       {loading ? 'Refreshing' : 'Refresh'}
     </button>
   </div>
@@ -82,19 +83,23 @@
     <EmptyState title="No ready work" message="Blocked and closed issues are excluded from this queue." />
   {:else}
     {#if error !== ''}
-      <p class="form-error" role="alert">{error}</p>
+      <p class="error-panel m-3.5" role="alert">{error}</p>
     {/if}
-    <ul class="ready-list" aria-label="Ready issues">
+    <ul class="grid" aria-label="Ready issues">
       {#each issues as issue, index}
-        <li>
-          <button type="button" class="ready-row" onclick={() => navigate(`/issues/${issue.id}`)}>
-            <span class="queue-rank">{index + 1}</span>
-            <span class="ready-copy">
-              <strong>{issue.title}</strong>
-              <small>{issue.id} · {issue.issue_type} · {ageLabel(issue)}</small>
+        <li class="min-w-0">
+          <button
+            type="button"
+            class="grid w-full min-h-[72px] grid-cols-[40px_minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-border px-3.5 py-3 text-left transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus max-mobile:grid-cols-[32px_minmax(0,1fr)]"
+            onclick={() => navigate(`/issues/${issue.id}`)}
+          >
+            <span class="grid size-8 place-items-center rounded-md bg-accent-subtle font-bold text-accent-fg">{index + 1}</span>
+            <span class="grid min-w-0 gap-1">
+              <strong class="truncate text-text">{issue.title}</strong>
+              <small class="truncate text-muted">{issue.id} · {issue.issue_type} · {ageLabel(issue)}</small>
             </span>
-            <span class="status-pill">{issue.state}</span>
-            <span class="priority-pill">P{issue.priority}</span>
+            <span class="pill {statePillClass(issue.state)} max-mobile:justify-self-start">{stateLabel(issue.state)}</span>
+            <span class="pill max-mobile:justify-self-start">P{issue.priority}</span>
           </button>
         </li>
       {/each}
